@@ -4,13 +4,14 @@ import os
 import unittest
 import signal
 import time
+from unittest.mock import Mock
 
 from opendbc.car.structs import car
 from openpilot.common.test import OpenpilotTestCase
 from openpilot.common.params import Params
 import openpilot.system.manager.manager as manager
 from openpilot.system.manager.process import ensure_running
-from openpilot.system.manager.process_config import managed_processes, procs
+from openpilot.system.manager.process_config import get_processes_to_run, managed_processes, procs
 from openpilot.common.hardware import HARDWARE
 
 os.environ['FAKEUPLOAD'] = "1"
@@ -37,6 +38,18 @@ class TestManager(OpenpilotTestCase):
     # TODO: ensure there are blacklisted procs until we have a dedicated test
     assert len(BLACKLIST_PROCS), "No blacklisted procs to test not_run"
 
+  def test_ensure_running(self):
+    run = Mock()
+    run.name, run.enabled = "run", True
+    stop = Mock()
+    stop.name, stop.enabled = "stop", True
+
+    running = ensure_running({p.name: p for p in (run, stop)}.values(), {"run"})
+
+    assert running == [run]
+    run.start.assert_called_once_with()
+    stop.stop.assert_called_once_with(block=False)
+
   def test_set_params_with_default_value(self):
     params = Params()
     params.clear_all()
@@ -59,7 +72,8 @@ class TestManager(OpenpilotTestCase):
     manager.manager_init()
 
     CP = car.CarParams.new_message()
-    procs = ensure_running(managed_processes.values(), True, Params(), CP, not_run=BLACKLIST_PROCS)
+    params = Params()
+    procs = ensure_running(managed_processes.values(), get_processes_to_run(True, params, CP), not_run=BLACKLIST_PROCS)
 
     time.sleep(10)
 

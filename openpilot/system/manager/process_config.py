@@ -124,3 +124,7 @@ procs = [
 ]
 
 managed_processes = {p.name: p for p in procs}
+
+
+def get_processes_to_run(started: bool, params: Params, CP: car.CarParams) -> set[str]:
+  return {p.name for p in procs if p.should_run(started, params, CP)}

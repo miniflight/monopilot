@@ -15,7 +15,7 @@ from openpilot.common.text_window import TextWindow
 from openpilot.common.hardware import HARDWARE
 from openpilot.system.manager.helpers import unblock_stdout, save_bootlog
 from openpilot.system.manager.process import ensure_running
-from openpilot.system.manager.process_config import managed_processes
+from openpilot.system.manager.process_config import get_processes_to_run, managed_processes
 from openpilot.system.athena.registration import register, UNREGISTERED_DONGLE_ID
 from openpilot.common.swaglog import cloudlog, add_file_handler
 from openpilot.common.version import get_build_metadata
@@ -117,7 +117,7 @@ def manager_thread() -> None:
   pm = messaging.PubMaster(['managerState'])
 
   params.put_bool("IsOffroad", True, block=True)
-  ensure_running(managed_processes.values(), False, params=params, CP=sm['carParams'], not_run=ignore)
+  ensure_running(managed_processes.values(), get_processes_to_run(False, params, sm['carParams']), not_run=ignore)
 
   started_prev = False
   ignition_prev = False
@@ -143,7 +143,7 @@ def manager_thread() -> None:
     started_prev = started
     ignition_prev = ignition
 
-    ensure_running(managed_processes.values(), started, params=params, CP=sm['carParams'], not_run=ignore)
+    ensure_running(managed_processes.values(), get_processes_to_run(started, params, sm['carParams']), not_run=ignore)
 
     running = ' '.join("{}{}\u001b[0m".format("\u001b[32m" if p.proc.is_alive() else "\u001b[31m", p.name)
                        for p in managed_processes.values() if p.proc)
