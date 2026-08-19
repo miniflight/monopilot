@@ -70,61 +70,63 @@ def and_(*fns):
 def not_(*fns):
   return lambda *args: operator.not_(*(fn(*args) for fn in fns))
 
-procs = [
-  DaemonProcess("manage_athenad", "openpilot.system.athena.manage_athenad", "AthenadPid"),
+processes_and_rules = [
+  (DaemonProcess("manage_athenad", "openpilot.system.athena.manage_athenad", "AthenadPid"), always_run),
 
-  NativeProcess("loggerd", "openpilot/system/loggerd", ["./loggerd"], logging),
-  NativeProcess("encoderd", "openpilot/system/loggerd", ["./encoderd"], only_onroad),
-  NativeProcess("stream_encoderd", "openpilot/system/loggerd", ["./encoderd", "--stream"], or_(and_(livestream, not_(iscar)), notcar)),
-  PythonProcess("logmessaged", "openpilot.system.logmessaged", always_run),
+  (NativeProcess("loggerd", "openpilot/system/loggerd", ["./loggerd"]), logging),
+  (NativeProcess("encoderd", "openpilot/system/loggerd", ["./encoderd"]), only_onroad),
+  (NativeProcess("stream_encoderd", "openpilot/system/loggerd", ["./encoderd", "--stream"]), or_(and_(livestream, not_(iscar)), notcar)),
+  (PythonProcess("logmessaged", "openpilot.system.logmessaged"), always_run),
 
-  NativeProcess("camerad", "openpilot/system/camerad", ["./camerad"], or_(driverview, livestream), enabled=not WEBCAM),
-  PythonProcess("webcamerad", "openpilot.system.camerad.webcam.camerad", driverview, enabled=WEBCAM),
-  PythonProcess("proclogd", "openpilot.system.proclogd", only_onroad, enabled=platform.system() != "Darwin"),
-  PythonProcess("journald", "openpilot.system.journald", only_onroad, platform.system() != "Darwin"),
-  PythonProcess("micd", "openpilot.system.micd", iscar),
-  PythonProcess("timed", "openpilot.system.timed", always_run, enabled=not PC),
+  (NativeProcess("camerad", "openpilot/system/camerad", ["./camerad"], enabled=not WEBCAM), or_(driverview, livestream)),
+  (PythonProcess("webcamerad", "openpilot.system.camerad.webcam.camerad", enabled=WEBCAM), driverview),
+  (PythonProcess("proclogd", "openpilot.system.proclogd", enabled=platform.system() != "Darwin"), only_onroad),
+  (PythonProcess("journald", "openpilot.system.journald", enabled=platform.system() != "Darwin"), only_onroad),
+  (PythonProcess("micd", "openpilot.system.micd"), iscar),
+  (PythonProcess("timed", "openpilot.system.timed", enabled=not PC), always_run),
 
-  PythonProcess("modeld", "openpilot.selfdrive.modeld.modeld", only_onroad),
-  PythonProcess("dmonitoringmodeld", "openpilot.selfdrive.modeld.dmonitoringmodeld", driverview, enabled=(WEBCAM or not PC)),
+  (PythonProcess("modeld", "openpilot.selfdrive.modeld.modeld"), only_onroad),
+  (PythonProcess("dmonitoringmodeld", "openpilot.selfdrive.modeld.dmonitoringmodeld", enabled=(WEBCAM or not PC)), driverview),
 
-  PythonProcess("sensord", "openpilot.system.sensord.sensord", only_onroad, enabled=not PC),
-  PythonProcess("ui", "openpilot.selfdrive.ui.ui", always_run),
-  PythonProcess("soundd", "openpilot.selfdrive.ui.soundd", driverview),
-  PythonProcess("locationd", "openpilot.selfdrive.locationd.locationd", only_onroad),
-  NativeProcess("_pandad", "openpilot/selfdrive/pandad", ["./pandad"], always_run, enabled=False),
-  PythonProcess("calibrationd", "openpilot.selfdrive.locationd.calibrationd", only_onroad),
-  PythonProcess("torqued", "openpilot.selfdrive.locationd.torqued", only_onroad),
-  PythonProcess("controlsd", "openpilot.selfdrive.controls.controlsd", and_(not_joystick, iscar)),
-  PythonProcess("joystickd", "openpilot.tools.joystick.joystickd", or_(joystick, notcar)),
-  PythonProcess("selfdrived", "openpilot.selfdrive.selfdrived.selfdrived", only_onroad),
-  PythonProcess("card", "openpilot.selfdrive.car.card", only_onroad),
-  PythonProcess("deleter", "openpilot.system.loggerd.deleter", always_run),
-  PythonProcess("dmonitoringd", "openpilot.selfdrive.monitoring.dmonitoringd", driverview, enabled=(WEBCAM or not PC)),
-  PythonProcess("qcomgpsd", "openpilot.system.qcomgpsd.qcomgpsd", qcomgps, enabled=COMMA_HARDWARE),
-  PythonProcess("pandad", "openpilot.selfdrive.pandad.pandad", always_run),
-  PythonProcess("paramsd", "openpilot.selfdrive.locationd.paramsd", only_onroad),
-  PythonProcess("lagd", "openpilot.selfdrive.locationd.lagd", only_onroad),
-  PythonProcess("ubloxd", "openpilot.system.ubloxd.ubloxd", ublox, enabled=COMMA_HARDWARE),
-  PythonProcess("pigeond", "openpilot.system.ubloxd.pigeond", ublox, enabled=COMMA_HARDWARE),
-  PythonProcess("plannerd", "openpilot.selfdrive.controls.plannerd", not_long_maneuver),
-  PythonProcess("maneuversd", "openpilot.tools.longitudinal_maneuvers.maneuversd", long_maneuver),
-  PythonProcess("lateral_maneuversd", "openpilot.tools.lateral_maneuvers.lateral_maneuversd", lat_maneuver),
-  PythonProcess("radard", "openpilot.selfdrive.controls.radard", only_onroad),
-  PythonProcess("hardwared", "openpilot.system.hardware.hardwared", always_run),
-  PythonProcess("modem", "openpilot.common.hardware.comma.modem", always_run, enabled=COMMA_HARDWARE),
-  PythonProcess("tombstoned", "openpilot.system.tombstoned", always_run, enabled=not PC),
-  PythonProcess("updated", "openpilot.system.updated.updated", only_offroad, enabled=not PC),
-  PythonProcess("uploader", "openpilot.system.loggerd.uploader", always_run),
+  (PythonProcess("sensord", "openpilot.system.sensord.sensord", enabled=not PC), only_onroad),
+  (PythonProcess("ui", "openpilot.selfdrive.ui.ui"), always_run),
+  (PythonProcess("soundd", "openpilot.selfdrive.ui.soundd"), driverview),
+  (PythonProcess("locationd", "openpilot.selfdrive.locationd.locationd"), only_onroad),
+  (NativeProcess("_pandad", "openpilot/selfdrive/pandad", ["./pandad"], enabled=False), always_run),
+  (PythonProcess("calibrationd", "openpilot.selfdrive.locationd.calibrationd"), only_onroad),
+  (PythonProcess("torqued", "openpilot.selfdrive.locationd.torqued"), only_onroad),
+  (PythonProcess("controlsd", "openpilot.selfdrive.controls.controlsd"), and_(not_joystick, iscar)),
+  (PythonProcess("joystickd", "openpilot.tools.joystick.joystickd"), or_(joystick, notcar)),
+  (PythonProcess("selfdrived", "openpilot.selfdrive.selfdrived.selfdrived"), only_onroad),
+  (PythonProcess("card", "openpilot.selfdrive.car.card"), only_onroad),
+  (PythonProcess("deleter", "openpilot.system.loggerd.deleter"), always_run),
+  (PythonProcess("dmonitoringd", "openpilot.selfdrive.monitoring.dmonitoringd", enabled=(WEBCAM or not PC)), driverview),
+  (PythonProcess("qcomgpsd", "openpilot.system.qcomgpsd.qcomgpsd", enabled=COMMA_HARDWARE), qcomgps),
+  (PythonProcess("pandad", "openpilot.selfdrive.pandad.pandad"), always_run),
+  (PythonProcess("paramsd", "openpilot.selfdrive.locationd.paramsd"), only_onroad),
+  (PythonProcess("lagd", "openpilot.selfdrive.locationd.lagd"), only_onroad),
+  (PythonProcess("ubloxd", "openpilot.system.ubloxd.ubloxd", enabled=COMMA_HARDWARE), ublox),
+  (PythonProcess("pigeond", "openpilot.system.ubloxd.pigeond", enabled=COMMA_HARDWARE), ublox),
+  (PythonProcess("plannerd", "openpilot.selfdrive.controls.plannerd"), not_long_maneuver),
+  (PythonProcess("maneuversd", "openpilot.tools.longitudinal_maneuvers.maneuversd"), long_maneuver),
+  (PythonProcess("lateral_maneuversd", "openpilot.tools.lateral_maneuvers.lateral_maneuversd"), lat_maneuver),
+  (PythonProcess("radard", "openpilot.selfdrive.controls.radard"), only_onroad),
+  (PythonProcess("hardwared", "openpilot.system.hardware.hardwared"), always_run),
+  (PythonProcess("modem", "openpilot.common.hardware.comma.modem", enabled=COMMA_HARDWARE), always_run),
+  (PythonProcess("tombstoned", "openpilot.system.tombstoned", enabled=not PC), always_run),
+  (PythonProcess("updated", "openpilot.system.updated.updated", enabled=not PC), only_offroad),
+  (PythonProcess("uploader", "openpilot.system.loggerd.uploader"), always_run),
 
   # debug procs
-  NativeProcess("bridge", "openpilot/cereal/messaging", ["./bridge"], notcar),
-  PythonProcess("webrtcd", "openpilot.system.webrtc.webrtcd", or_(and_(livestream, not_(iscar)), notcar)),
-  PythonProcess("joystick", "openpilot.tools.joystick.joystick_control", and_(joystick, iscar)),
+  (NativeProcess("bridge", "openpilot/cereal/messaging", ["./bridge"]), notcar),
+  (PythonProcess("webrtcd", "openpilot.system.webrtc.webrtcd"), or_(and_(livestream, not_(iscar)), notcar)),
+  (PythonProcess("joystick", "openpilot.tools.joystick.joystick_control"), and_(joystick, iscar)),
 ]
 
+procs = [p for p, _ in processes_and_rules]
 managed_processes = {p.name: p for p in procs}
+process_rules = {p.name: rule for p, rule in processes_and_rules}
 
 
 def get_processes_to_run(started: bool, params: Params, CP: car.CarParams) -> set[str]:
-  return {p.name for p in procs if p.should_run(started, params, CP)}
+  return {name for name, rule in process_rules.items() if rule(started, params, CP)}

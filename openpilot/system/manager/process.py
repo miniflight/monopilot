@@ -3,7 +3,7 @@ import os
 import signal
 import time
 import subprocess
-from collections.abc import Callable, ValuesView
+from collections.abc import ValuesView
 from abc import ABC, abstractmethod
 from multiprocessing import Process
 
@@ -62,7 +62,6 @@ def join_process(process: Process, timeout: float) -> None:
 class ManagerProcess(ABC):
   daemon = False
   sigkill = False
-  should_run: Callable[..., bool]
   proc: Process | None = None
   enabled = True
   name = ""
@@ -131,11 +130,10 @@ class ManagerProcess(ABC):
 
 
 class NativeProcess(ManagerProcess):
-  def __init__(self, name, cwd, cmdline, should_run, enabled=True, sigkill=False):
+  def __init__(self, name, cwd, cmdline, enabled=True, sigkill=False):
     self.name = name
     self.cwd = cwd
     self.cmdline = cmdline
-    self.should_run = should_run
     self.enabled = enabled
     self.sigkill = sigkill
     self.launcher = nativelauncher
@@ -156,10 +154,9 @@ class NativeProcess(ManagerProcess):
 
 
 class PythonProcess(ManagerProcess):
-  def __init__(self, name, module, should_run, enabled=True, sigkill=False):
+  def __init__(self, name, module, enabled=True, sigkill=False):
     self.name = name
     self.module = module
-    self.should_run = should_run
     self.enabled = enabled
     self.sigkill = sigkill
     self.launcher = launcher
@@ -187,10 +184,6 @@ class DaemonProcess(ManagerProcess):
     self.param_name = param_name
     self.enabled = enabled
     self.params = None
-
-  @staticmethod
-  def should_run(started, params, CP):
-    return True
 
   def start(self) -> None:
     if self.params is None:

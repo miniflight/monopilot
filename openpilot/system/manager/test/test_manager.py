@@ -11,7 +11,7 @@ from openpilot.common.test import OpenpilotTestCase
 from openpilot.common.params import Params
 import openpilot.system.manager.manager as manager
 from openpilot.system.manager.process import ensure_running
-from openpilot.system.manager.process_config import get_processes_to_run, managed_processes, procs
+from openpilot.system.manager.process_config import get_processes_to_run, managed_processes, process_rules, procs
 from openpilot.common.hardware import HARDWARE
 
 os.environ['FAKEUPLOAD'] = "1"
@@ -33,6 +33,9 @@ class TestManager(OpenpilotTestCase):
 
   def test_duplicate_procs(self):
     assert len(procs) == len(managed_processes), "Duplicate process names"
+
+  def test_process_rules(self):
+    assert process_rules.keys() == managed_processes.keys()
 
   def test_blacklisted_procs(self):
     # TODO: ensure there are blacklisted procs until we have a dedicated test
