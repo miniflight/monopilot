@@ -6,7 +6,6 @@ import signal
 import time
 from unittest.mock import Mock
 
-from opendbc.car.structs import car
 from openpilot.common.test import OpenpilotTestCase
 from openpilot.common.params import Params
 import openpilot.system.manager.manager as manager
@@ -24,7 +23,6 @@ class TestManager(OpenpilotTestCase):
   def setup_method(self):
     HARDWARE.set_power_save(False)
 
-    # ensure clean CarParams
     params = Params()
     params.clear_all()
 
@@ -74,9 +72,8 @@ class TestManager(OpenpilotTestCase):
     HARDWARE.set_power_save(False)
     manager.manager_init()
 
-    CP = car.CarParams.new_message()
     params = Params()
-    procs = ensure_running(managed_processes.values(), get_processes_to_run(True, params, CP), not_run=BLACKLIST_PROCS)
+    procs = ensure_running(managed_processes.values(), get_processes_to_run(True, params), not_run=BLACKLIST_PROCS)
 
     time.sleep(10)
 

@@ -117,7 +117,7 @@ def manager_thread() -> None:
   pm = messaging.PubMaster(['managerState'])
 
   params.put_bool("IsOffroad", True, block=True)
-  ensure_running(managed_processes.values(), get_processes_to_run(False, params, sm['carParams']), not_run=ignore)
+  ensure_running(managed_processes.values(), get_processes_to_run(False, params), not_run=ignore)
 
   started_prev = False
   ignition_prev = False
@@ -143,7 +143,7 @@ def manager_thread() -> None:
     started_prev = started
     ignition_prev = ignition
 
-    ensure_running(managed_processes.values(), get_processes_to_run(started, params, sm['carParams']), not_run=ignore)
+    ensure_running(managed_processes.values(), get_processes_to_run(started, params), not_run=ignore)
 
     running = ' '.join("{}{}\u001b[0m".format("\u001b[32m" if p.proc.is_alive() else "\u001b[31m", p.name)
                        for p in managed_processes.values() if p.proc)

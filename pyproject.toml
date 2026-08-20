@@ -63,6 +63,7 @@ testing = [
 
 tools = [
   "matplotlib",
+  "pymavlink",
 
   "comma-deps-imgui",
   "comma-deps-bootstrap-icons",

@@ -2518,6 +2518,19 @@ struct Touch {
   value @4 :Int32;
 }
 
+struct VehicleState {
+  positionNED @0 :List(Float32);
+  velocityNED @1 :List(Float32);
+}
+
+struct PositionGoal {
+  positionNED @0 :List(Float32);
+}
+
+struct PositionTarget {
+  positionNED @0 :List(Float32);
+}
+
 struct Event {
   logMonoTime @0 :UInt64;  # nanoseconds
   valid @67 :Bool = true;
@@ -2567,6 +2580,10 @@ struct Event {
     modelV2 @75 :ModelDataV2;
     drivingModelData @128 :DrivingModelData;
     driverStateV2 @92 :DriverStateV2;
+
+    vehicleState @153 :VehicleState;
+    positionGoal @154 :PositionGoal;
+    positionTarget @155 :PositionTarget;
 
     # camera stuff, each camera state has a matching encode idx
     narrowRoadCameraState @2 :FrameData;
