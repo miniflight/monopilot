@@ -1,0 +1,7 @@
+(version 1)
+
+(allow default)
+
+; Permit the local event contract. Deny all non-local IP connections.
+(deny network-outbound (remote ip))
+(allow network-outbound (remote ip "localhost:*"))
